@@ -1997,6 +1997,7 @@ var vtprotoPool_FeedEntity = sync.Pool{
 func (m *FeedEntity) ResetVT() {
 	if m != nil {
 		m.TripUpdate.ReturnToVTPool()
+		m.Vehicle.ReturnToVTPool()
 		m.Stop.ReturnToVTPool()
 		m.Reset()
 	}
@@ -2036,6 +2037,33 @@ func (m *TripUpdate) ReturnToVTPool() {
 }
 func TripUpdateFromVTPool() *TripUpdate {
 	return vtprotoPool_TripUpdate.Get().(*TripUpdate)
+}
+
+var vtprotoPool_VehiclePosition = sync.Pool{
+	New: func() interface{} {
+		return &VehiclePosition{}
+	},
+}
+
+func (m *VehiclePosition) ResetVT() {
+	if m != nil {
+		m.Trip.ReturnToVTPool()
+		for _, mm := range m.MultiCarriageDetails {
+			mm.Reset()
+		}
+		f0 := m.MultiCarriageDetails[:0]
+		m.Reset()
+		m.MultiCarriageDetails = f0
+	}
+}
+func (m *VehiclePosition) ReturnToVTPool() {
+	if m != nil {
+		m.ResetVT()
+		vtprotoPool_VehiclePosition.Put(m)
+	}
+}
+func VehiclePositionFromVTPool() *VehiclePosition {
+	return vtprotoPool_VehiclePosition.Get().(*VehiclePosition)
 }
 
 var vtprotoPool_TripDescriptor = sync.Pool{
@@ -3310,7 +3338,7 @@ func (m *FeedEntity) UnmarshalVT(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Vehicle == nil {
-				m.Vehicle = &VehiclePosition{}
+				m.Vehicle = VehiclePositionFromVTPool()
 			}
 			if err := m.Vehicle.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -4652,7 +4680,7 @@ func (m *VehiclePosition) UnmarshalVT(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Trip == nil {
-				m.Trip = &TripDescriptor{}
+				m.Trip = TripDescriptorFromVTPool()
 			}
 			if err := m.Trip.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -4912,7 +4940,14 @@ func (m *VehiclePosition) UnmarshalVT(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.MultiCarriageDetails = append(m.MultiCarriageDetails, &VehiclePosition_CarriageDetails{})
+			if len(m.MultiCarriageDetails) == cap(m.MultiCarriageDetails) {
+				m.MultiCarriageDetails = append(m.MultiCarriageDetails, &VehiclePosition_CarriageDetails{})
+			} else {
+				m.MultiCarriageDetails = m.MultiCarriageDetails[:len(m.MultiCarriageDetails)+1]
+				if m.MultiCarriageDetails[len(m.MultiCarriageDetails)-1] == nil {
+					m.MultiCarriageDetails[len(m.MultiCarriageDetails)-1] = &VehiclePosition_CarriageDetails{}
+				}
+			}
 			if err := m.MultiCarriageDetails[len(m.MultiCarriageDetails)-1].UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

@@ -22,6 +22,7 @@ endif
         --go-vtproto_opt=pool=./feed.TripDescriptor \
         --go-vtproto_opt=pool=./feed.EntitySelector \
         --go-vtproto_opt=pool=./feed.Stop \
+        --go-vtproto_opt=pool=./feed.VehiclePosition \
 	$<
 
 $(proto):
